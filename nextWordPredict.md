@@ -21,7 +21,7 @@ Repository
 ========================================================
 
 - Application can be executed at [ShinyApps.io]()
-- Source code is available on [GitHub]()
+- Source code is available on [GitHub](https://github.com/tpanchal68/WordPrediction)
 
 
 Future Enhencements
