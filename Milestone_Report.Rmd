@@ -1,0 +1,199 @@
+---
+title: "Milestone Report for Coursera Data Science Capstone"
+author: "Tejash Panchal"
+date: "March 19, 2016"
+output: html_document
+---
+
+# Executive summary
+The goal of the Data Science Capstone Project is to utilize all the skills that has been acquired throughout the Data Science Specialization curriculum and create an application that predicts the next word based on the predictive model that will be created.  This week's assignment is to generate a report that explains exploratory analysis of Swiftkey Datasets and goals for the eventual app and algorithm.
+
+# Load Swiftkey data files and generate summary statistics
+In this section of the project, I will read all available files in a specific folder and extract files containing data related to news, blogs, and twitter.  I will also perform a basic file analysis such as the size of each files, number of lines and number of words each files contains and present in graphical format.
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# **Load the R package for text mining and then load your texts into R.**
+library(NLP)
+library(tm)
+library(RWeka)
+library(stringi)
+library(SnowballC)
+library(ggplot2)
+library(doParallel)
+library(wordcloud)  
+
+##########################################################################################
+#                                  Loading Texts                                         #
+########################################################################################## 
+cname <- file.path("..", "Data", "Coursera-SwiftKey", "final", "en_US")   
+filenames <- DirSource(cname)$filelist
+print(paste("Files Detected:", length(filenames)))
+for(i in seq(filenames)){
+        print(filenames[i])
+}
+#Load each files exist in the path
+for(i in seq(filenames)){
+        if (grepl("blogs", filenames[i])){
+                #print(paste(i, "blogs found"))
+                blogs_size <- file.info(filenames[i])$size/1024^2
+                # Read blogs data in binary mode
+                # Because of large file, I will use only first 25k lines
+                conn <- file(filenames[i], open = "rb")
+                blogs <- readLines(conn, encoding = "UTF-8", skipNul = TRUE)
+                #print(summary(blogs))
+                close(conn)
+        }
+        if (grepl("twitter", filenames[i])){
+                #print(paste(i, "twitter found"))
+                twits_size <- file.info(filenames[i])$size/1024^2
+                # Read twitter data in binary mode
+                # Because of large file, I will use only first 25k lines
+                conn <- file(filenames[i], open = "rb")
+                twits <- readLines(conn, encoding = "UTF-8", skipNul = TRUE)
+                #print(summary(twits))
+                close(conn)
+        }
+        if (grepl("news", filenames[i])){
+                #print(paste(i, "news found"))
+                news_size <- file.info(filenames[i])$size/1024^2
+                # Read news data in binary mode
+                conn <- file(filenames[i], open = "rb")
+                news <- readLines(conn, encoding = "UTF-8", skipNul = TRUE)
+                #print(summary(news))
+                close(conn)
+        }
+}
+rm(conn)
+
+data_summary <- data.frame(
+        Communication_Medium = c("blogs","news","twitter"),
+        Filesize_MB = c(blogs_size, news_size, twits_size),
+        Numner_of_lines = c(length(blogs),length(news),length(twits)),
+        Number_of_words = c(sum(stri_count_words(blogs)), sum(stri_count_words(news)), sum(stri_count_words(twits)))
+)
+print(data_summary)
+
+p1 <- ggplot(data = data_summary, aes(x=Communication_Medium, y=Filesize_MB)) +
+        geom_bar(stat = "identity") +
+        theme(legend.title=element_blank()) +
+        xlab("Communication Medium") + ylab("Filesize in MB") +
+        labs(title = "Filesize Plot")
+
+p2 <- ggplot(data = data_summary, aes(x=Communication_Medium, y=Numner_of_lines)) +
+        geom_bar(stat = "identity") +
+        theme(legend.title=element_blank()) +
+        xlab("Communication Medium") + ylab("Number of Lines") +
+        labs(title = "Lines per file Plot")
+
+p3 <- ggplot(data = data_summary, aes(x=Communication_Medium, y=Number_of_words)) +
+        geom_bar(stat = "identity") +
+        theme(legend.title=element_blank()) +
+        xlab("Communication Medium") + ylab("Number of Words") +
+        labs(title = "Words per file Plot")
+
+print(p1)
+print(p2)
+print(p3)
+```
+
+# Pre-processing
+In this section of the project, since the data files are large, I will take sample of the data and create the corpus of words.  I will also perform data clean up and prepare the data to be Tokenized.
+
+```{r, warning=FALSE, message=FALSE}
+#Because of the large size and process time, only a subset of files will be sampled
+sample_blogs <- sample(blogs, 5000, replace = TRUE)
+sample_twits <- sample(twits, 5000, replace = TRUE)
+sample_news <- sample(news, 5000, replace = TRUE)
+
+#Combine the datasets and begin to create the corpus of words
+combined_data = c(sample_blogs, sample_twits, sample_news)
+#Create Corpus
+docs <- Corpus(VectorSource(combined_data))
+
+getTransformations()
+
+#create the toSpace content transformer to eliminate colons and hypens
+toSpace <- content_transformer(function(x, pattern) {return (gsub(pattern, " ", x))})
+docs <- tm_map(docs, toSpace, "-")
+docs <- tm_map(docs, toSpace, ":")
+
+docs <- tm_map(docs, removePunctuation)  #Remove punctuation
+docs <- tm_map(docs, toSpace, "/")   #Remove non-standard punctuation
+docs <- tm_map(docs, toSpace, "@")   #Remove non-standard punctuation
+docs <- tm_map(docs, toSpace, "\\|")   #Remove non-standard punctuation
+docs <- tm_map(docs, toSpace, " -")   #Remove non-standard punctuation
+docs <- tm_map(docs, toSpace, "[^[:graph:]]")   #Remove non-standard punctuation emoji
+
+docs <- tm_map(docs, content_transformer(tolower)) #Transform to lower case
+docs <- tm_map(docs, removeNumbers) #Strip digits
+docs <- tm_map(docs, removeWords, c("fuck", "bitch", "ass", "cunt", "pussy", "asshole")) #Remove bad words
+docs <- tm_map(docs, removeWords, stopwords("english")) #remove stopwords
+docs <- tm_map(docs, stripWhitespace) #Strip whitespace
+docs <- tm_map(docs, stemDocument)   #Stem document
+docs <- tm_map(docs, PlainTextDocument) #Convert to plaintextdocument to complete preprocessing
+
+```
+
+# Tokenize data into Unigrams, Bigrams and Trigrams
+In this section of the project, I will tokenize the data into three different categories: Unigram, Bigram, and Trigram.  I will also extract frequently used words and prepare them for graph.
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+#Tokenize sample into Unigrams, Bigrams and Trigrams
+uniGramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 1, max = 1))
+biGramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
+triGramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 3, max = 3))
+
+#Unigram Data Exploration
+unigram_tdm <- TermDocumentMatrix(docs, control = list(tokenize = uniGramTokenizer))
+unigram_tdm_matrix <- removeSparseTerms(unigram_tdm, 0.99) # This makes a matrix that is 99% empty space, maximum.   
+uni_freqTerms <- findFreqTerms(unigram_tdm_matrix, lowfreq=200)   # Change "200" to whatever is most appropriate for your text data.
+uni_termFrequency <- rowSums(as.matrix(unigram_tdm_matrix[uni_freqTerms,]))
+uni_termFrequency <- data.frame(uni_word=names(uni_termFrequency), uni_frequency=uni_termFrequency)
+
+#Unigram Data Plot
+p <- ggplot(subset(uni_termFrequency, uni_frequency>500), aes(uni_word, uni_frequency)) +
+        geom_bar(stat="identity") +
+        theme(legend.title=element_blank()) +
+        xlab("Words") + ylab("Frequency") +
+        labs(title = "Top uni_words by Frequency")
+print(p)
+
+#Bigram Data Exploration
+# bigram_tdm <- TermDocumentMatrix(docs, control = list(tokenize = biGramTokenizer))
+# bigram_tdm_matrix <- removeSparseTerms(bigram_tdm, 0.99) # This makes a matrix that is 99% empty space, maximum.   
+# bi_freqTerms <- findFreqTerms(bigram_tdm_matrix, lowfreq=500)   # Change "500" to whatever is most appropriate for your text data.
+# bi_termFrequency <- rowSums(as.matrix(bigram_tdm_matrix[bi_freqTerms,]))
+# bi_termFrequency <- data.frame(bi_word=names(bi_termFrequency), bi_frequency=bi_termFrequency)
+
+#Bigram Data Plot
+# p <- ggplot(subset(bi_termFrequency, bi_frequency>500), aes(bi_word, bi_frequency)) +
+#         geom_bar(stat = "identity") +
+#         theme(legend.title=element_blank()) +
+#         xlab("Words") + ylab("Frequency") +
+#         labs(title = "Top bi_words by Frequency")
+# print(g)
+
+#Trigram Data Exploration
+# trigram_tdm <- TermDocumentMatrix(docs, control = list(tokenize = triGramTokenizer))
+# trigram_tdm_matrix <- removeSparseTerms(trigram_tdm, 0.99) # This makes a matrix that is 99% empty space, maximum.   
+# tri_freqTerms <- findFreqTerms(trigram_tdm_matrix, lowfreq=500)   # Change "500" to whatever is most appropriate for your text data.
+# tri_termFrequency <- rowSums(as.matrix(trigram_tdm_matrix[tri_freqTerms,]))
+# tri_termFrequency <- data.frame(tri_word=names(tri_termFrequency), tri_frequency=tri_termFrequency)
+
+#Trigram Data Plot
+# p <- ggplot(subset(tri_termFrequency, tri_frequency>500), aes(tri_word, tri_frequency)) +
+#         geom_bar(stat = "identity") +
+#         theme(legend.title=element_blank()) +
+#         xlab("Words") + ylab("Frequency") +
+#         labs(title = "Top tri_words by Frequency")
+# print(g)
+```
+
+# Interesting Findings
+Emojies are fun to use with blogs, news, and twits; however, when performing text mining, it could cause some problems if not handled.  The best thing is to just treat them as graphs and remove them.
+
+# Conclusions
+From the Exploratory Data Analysis and Modeling we can conclude that when working with large data files such as blogs, news, and twits, data cleanup becomes very important; otherwise, process time will be long and costly.
+
+# Next Steps
+Next steps are to work with bigram, trigram, define text modeling and prediction model based on n-gram.  Fine tune code for performance by adding parallel processing.  Also prepare for shiny application and correlate chunks of code from this week with shiny application.
