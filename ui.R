@@ -1,5 +1,11 @@
-# This is the user-interface definition of a Shiny web application.
+# Author: Tejash Panchal
+# Word Prediction
+# Coursera Data Science Capstone Project
+# Licence: Freeware (Please see LICENSE.md file for terms and condition)
 #
+# This is the user-interface definition of a Shiny web application.
+# It allows user to select algorithm and type sentence.  Based on both of these inputs,
+# application will predict next word.
 
 shinyUI(pageWithSidebar(
         headerPanel("Word Prediction"),
@@ -35,6 +41,10 @@ shinyUI(pageWithSidebar(
                         tabPanel(
                                 p(icon("list-alt"), "Help"),
                                 includeMarkdown("help.md")
+                        ),
+                        tabPanel(
+                                p(icon("list-alt"), "License"),
+                                includeMarkdown("LICENSE.md")
                         )
                 )
         )

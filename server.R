@@ -1,3 +1,15 @@
+# Author: Tejash Panchal
+# Word Prediction
+# Coursera Data Science Capstone Project
+# Licence: Freeware (Please see LICENSE.md file for terms and condition)
+#
+# This is the server side of a Shiny web application.
+# First it cleans user input texts and converts to lower case.
+# As user types, it examins each characters and provides hints for the word being typed.
+# If it detects an empty space, the application sends last two typed words to
+# appropriate function based on chosen algorithm to get next word prediction.
+# Prediction function performs probability calculations and returns top 5 predictions.
+# Server side passes those predictions to UI side and displays in table format.
 
 
 library(shiny)
