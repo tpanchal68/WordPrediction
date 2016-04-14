@@ -5,7 +5,7 @@ author: "Tejash Panchal"
 date: "April 19, 2016"
 output: html_document
 ---
-Licence: Freeware (Please see LICENSE.md file for terms and conditions)
+Licence: Please see LICENSE.md file for terms and conditions
 
 - ui.R
 This is the user-interface definition of a Shiny web application.

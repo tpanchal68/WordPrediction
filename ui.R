@@ -45,6 +45,10 @@ shinyUI(pageWithSidebar(
                         tabPanel(
                                 p(icon("list-alt"), "License"),
                                 includeMarkdown("LICENSE.md")
+                        ),
+                        tabPanel(
+                                p(icon("list-alt"), "README"),
+                                includeMarkdown("README.md")
                         )
                 )
         )
