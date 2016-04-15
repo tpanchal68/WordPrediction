@@ -43,7 +43,7 @@ Application Instructions
 - User can use this application by typing text in "Text Input" box located in "User Input Area". 
 - Click "Clear!" button to clear the text in "Text Input:" area. 
 - For selected smoothing algorithm, the program will perform the probability calculations and displays top 5 suggested words for next word or top 5 hints for current word in table located in "Next Word Suggestion" area.
-- Application can be executed at [ShinyApps.io]()
+- Application can be executed at [ShinyApps.io](https://tpanchal.shinyapps.io/WordPrediction/)
 - Source code is available on [GitHub](https://github.com/tpanchal68/WordPrediction)
 
 

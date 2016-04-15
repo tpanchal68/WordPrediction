@@ -21,7 +21,7 @@ This application is to provide next word suggestion based on last two words type
 he
 * Source code is available on [GitHub](https://github.com/tpanchal68/WordPrediction)
 
-* Presentation is available on [RPub]()
+* Presentation is available on [RPub](http://rpubs.com/tpanchal/171364)
 
-* Application can be executed at [ShinyApps.io]()
+* Application can be executed at [ShinyApps.io](https://tpanchal.shinyapps.io/WordPrediction/)
 
