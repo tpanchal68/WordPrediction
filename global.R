@@ -13,3 +13,9 @@ if(!exists("trigrams")){
         trigrams <- readRDS("trigrams.rds")
         trigrams$word <- as.character(trigrams$word)
 }
+
+convAposWord <- readRDS("convAposWord.rds")
+convAposWord$apostropheWords <- as.character(convAposWord$apostropheWords)
+convAposWord$longForm <- as.character(convAposWord$longForm)
+
+singlechars <- readRDS("singlechars.rds")

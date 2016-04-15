@@ -1,5 +1,6 @@
 t <- proc.time()
 # **Load the R package for text mining and then load your texts into R.**
+source("textCleaner.R")
 library(tm)
 library(RWeka)
 library(R.utils)
@@ -27,24 +28,6 @@ cleaned_text <- NULL
 for (filename in filenames){
         combined_data <- c(combined_data, list(paste(readLines(file(filename), LinesToRead, encoding = "UTF-8", warn = FALSE), collapse="\n")))
         close(file(filename))
-}
-
-TextCleaner <- function(text_data){
-        #Remove ... with just a single .
-        text_data <- gsub(pattern="\\.+", x=text_data, replacement = '.')
-        #Swap all sentences ends with split code 'ootoo'
-        text_data <- gsub(pattern=';|\\.|!|\\?', x=text_data, replacement='ootoo')
-        text_data <- gsub(pattern="[^A-Za-z]+", x=text_data, replacement = ' ')
-        text_data <- tolower(text_data)
-        #remove leading whitespace
-        text_data <- gsub(pattern="^\\s+", x=text_data, replacement = ' ')
-        #remove trailing space
-        text_data <- gsub(pattern="\\s+", x=text_data, replacement = ' ')
-        #split sentences by split code
-        text_data <- unlist(strsplit(x=text_data, split='ootoo', fixed = TRUE))
-        #+([a-zA-Z]+) +\1 + For replicated words
-        
-        return(text_data)
 }
 
 for (i in 1:length(filenames)){
@@ -118,17 +101,17 @@ row.names(termFrequency) <- NULL
 Top20 <- termFrequency[1:20, ]
 #print(Top20)
 #View(termFrequency)
-saveRDS(termFrequency, file="ngrams.rds")
+#saveRDS(termFrequency, file="ngrams.rds")
 
-# ##Split termFrequency table into unigrams, bigrams, and trigrams
-# unigrams <- termFrequency[which(sapply(gregexpr("\\S+", termFrequency$word), length) == 1), ]
-# saveRDS(unigrams, file="unigrams.rds")
-# 
-# bigrams <- termFrequency[which(sapply(gregexpr("\\S+", termFrequency$word), length) == 2), ]
-# saveRDS(bigrams, file="bigrams.rds")
-# 
-# trigrams <- termFrequency[which(sapply(gregexpr("\\S+", termFrequency$word), length) == 3), ]
-# saveRDS(trigrams, file="trigrams.rds")
+##Split termFrequency table into unigrams, bigrams, and trigrams
+unigrams <- termFrequency[which(sapply(gregexpr("\\S+", termFrequency$word), length) == 1), ]
+saveRDS(unigrams, file="unigrams.rds")
+
+bigrams <- termFrequency[which(sapply(gregexpr("\\S+", termFrequency$word), length) == 2), ]
+saveRDS(bigrams, file="bigrams.rds")
+
+trigrams <- termFrequency[which(sapply(gregexpr("\\S+", termFrequency$word), length) == 3), ]
+saveRDS(trigrams, file="trigrams.rds")
 
 ##Stop parallel process
 stopCluster(cl)

@@ -1,7 +1,7 @@
 # Author: Tejash Panchal
 # Word Prediction
 # Coursera Data Science Capstone Project
-# Licence: Freeware (Please see LICENSE.md file for terms and condition)
+# Licence: Please see LICENSE.md file for terms and condition
 #
 # This is the user-interface definition of a Shiny web application.
 # It allows user to select algorithm and type sentence.  Based on both of these inputs,

@@ -1,7 +1,7 @@
 # Author: Tejash Panchal
 # Word Prediction
 # Coursera Data Science Capstone Project
-# Licence: Freeware (Please see LICENSE.md file for terms and condition)
+# Licence: Please see LICENSE.md file for terms and condition
 #
 # This is the server side of a Shiny web application.
 # First it cleans user input texts and converts to lower case.
@@ -14,20 +14,8 @@
 
 library(shiny)
 
+source("textCleaner.R")
 source("prediction.R")
-
-inputTextCleaner <- function(text_data){
-        #Remove ... with just a single .
-        text_data <- gsub(pattern="\\.+", x=text_data, replacement = '.')
-        text_data <- gsub(pattern="[^A-Za-z]+", x=text_data, replacement = ' ')
-        text_data <- tolower(text_data)
-        #remove leading whitespace
-        text_data <- gsub(pattern="^\\s+", x=text_data, replacement = ' ')
-        #remove trailing space
-        text_data <- gsub(pattern="\\s+", x=text_data, replacement = ' ')
-
-        return(text_data)
-}
 
 #Get hint to complete this word
 hintThisWord <- function(searchString){
@@ -53,7 +41,8 @@ shinyServer(function(input, output, session) {
                 splittedChars <- unlist(strsplit(userTyped, ""))
                 if (length(splittedChars) > 0) {
                         if (splittedChars[length(splittedChars)] == " "){
-                                cleanedInputText <- c(cleanedInputText, list(inputTextCleaner(paste(userTyped, collapse = " "))))
+                                #cleanedInputText <- c(cleanedInputText, list(inputTextCleaner(paste(userTyped, collapse = " "))))
+                                cleanedInputText <- c(cleanedInputText, list(TextCleaner(paste(userTyped, collapse = " "))))
                                 typedWords <- unlist(strsplit(cleanedInputText[[1]], " "))
                                 searchString <- paste(tail(typedWords, 2), collapse = " ")
                                 if (length(unlist(strsplit(searchString, " "))) < 2){
