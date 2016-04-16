@@ -17,17 +17,6 @@ library(shiny)
 source("textCleaner.R")
 source("prediction.R")
 
-#Get hint to complete this word
-hintThisWord <- function(searchString){
-        hintWords <- NULL
-        
-        searchPhrase <- paste0('^\\<', searchString)
-        hintWords_table <- subset(unigrams, grepl(searchPhrase, unigrams$word))
-        hintWords <- as.character(head(hintWords_table$word, 5))
-
-        return(hintWords)
-}
-
 shinyServer(function(input, output, session) {
 
         currentWord <- reactive({
@@ -45,22 +34,36 @@ shinyServer(function(input, output, session) {
                                 cleanedInputText <- c(cleanedInputText, list(TextCleaner(paste(userTyped, collapse = " "))))
                                 typedWords <- unlist(strsplit(cleanedInputText[[1]], " "))
                                 searchString <- paste(tail(typedWords, 2), collapse = " ")
-                                if (length(unlist(strsplit(searchString, " "))) < 2){
-                                        PredictWords <- getSingleWordPrediction(searchString)
-                                } else {
-                                        if (Smoothing == "Interpolation"){
-                                                PredictWords <- getInterPollationPrediction(searchString)
-                                        }
-                                        if (Smoothing == "MLE"){
-                                                PredictWords <- getMlePrediction(searchString)
-                                        }
-                                        if (Smoothing == "Laplace"){
-                                                PredictWords <- getLaplacePrediction(searchString)
-                                        }
-                                        if (Smoothing == "GoodTuring"){
-                                                PredictWords <- getGoodTuringPrediction(searchString)
+                                
+                                if (Smoothing == "Interpolation"){
+                                        if (length(unlist(strsplit(searchString, " "))) < 2){
+                                                PredictWords <- getInterPollationPrediction(searchString, bigrams)
+                                        } else {
+                                                PredictWords <- getInterPollationPrediction(searchString, trigrams)
                                         }
                                 }
+                                if (Smoothing == "MLE"){
+                                        if (length(unlist(strsplit(searchString, " "))) < 2){
+                                                PredictWords <- getMlePrediction(searchString, bigrams)
+                                        } else {
+                                                PredictWords <- getMlePrediction(searchString, trigrams)
+                                        }
+                                }
+                                if (Smoothing == "Laplace"){
+                                        if (length(unlist(strsplit(searchString, " "))) < 2){
+                                                PredictWords <- getLaplacePrediction(searchString, bigrams)
+                                        } else {
+                                                PredictWords <- getLaplacePrediction(searchString, trigrams)
+                                        }
+                                }
+                                if (Smoothing == "GoodTuring"){
+                                        if (length(unlist(strsplit(searchString, " "))) < 2){
+                                                PredictWords <- getGoodTuringPrediction(searchString, bigrams)
+                                        } else {
+                                                PredictWords <- getGoodTuringPrediction(searchString, trigrams)
+                                        }
+                                }
+                                
                                 currentWord_table <- data.frame(
                                         "Suggestion 1" = PredictWords[1], 
                                         "Suggestion 2" = PredictWords[2], 
