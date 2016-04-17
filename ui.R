@@ -24,7 +24,7 @@ shinyUI(pageWithSidebar(
                 ),
                 br(),
                 p("Please enter text in input box below."),
-                p("After typing a word, press spacebar to get next word prediction."),
+                strong("After typing a word, press spacebar to get next word prediction."),
                 textInput("inText", label = h3("Text Input:"), value = "Type here"),
                 br(),
                 actionButton("goButton", "Clear!"),

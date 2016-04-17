@@ -1,8 +1,8 @@
 name: WordPrediction
 account: tpanchal
 server: shinyapps.io
-bundleId: 421148
+bundleId: 421827
 url: https://tpanchal.shinyapps.io/WordPrediction/
-when: 1460751814.10021
+when: 1460831995.25899
 asMultiple: FALSE
 asStatic: FALSE
